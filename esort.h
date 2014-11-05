@@ -104,7 +104,7 @@ size_t esort( const char* in, const char* out, Compare comp = Compare(), size_t 
     IArchive iar(ifs);
 
     vector<T> data;
-    cout << "Reading and sorting blocks in '" << filesystem::temp_directory_path().native() "'..." << endl;
+    cout << "Reading and sorting blocks in '" << filesystem::temp_directory_path().native() << "'..." << endl;
 
     size_t index = 0;
     string prefix = filesystem::temp_directory_path().native() + "/esort_run_";
