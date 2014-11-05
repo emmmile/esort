@@ -7,11 +7,11 @@ using namespace std;
 class object {
 public:
 	int a;
-    string b;
+    int b;
 
 	object() {}
 
-	object(int a, string& c) : a(a), b(c) {
+	object(int a, int c) : a(a), b(c) {
 	}
 
 	template<class Archive>
@@ -43,10 +43,10 @@ BOOST_CLASS_TRACKING(object, boost::serialization::track_never);
 void create( size_t n, vector<object>& data ) {
     timer t;
 
-    string str = "this is an example";
+    //string str = "this is an example";
     for ( size_t i = 0; i < n; ++i ) {
-        random_shuffle(str.begin(), str.end());
-        object a(random() % 1000, str);
+        //random_shuffle(str.begin(), str.end());
+        object a(random() % 100000000, random() % 100000000);
         data.push_back(a);
     }
 
@@ -113,15 +113,15 @@ void external ( size_t n ) {
     write<OArchive>(input, data);
 
     timer t;
-    size_t total = esort<object, less<object>, IArchive, OArchive>(input, output, less<object>(), 256 * 1024);
+    size_t total = esort<object, less<object>, IArchive, OArchive>(input, output, less<object>(), 16 * 1024 * 1024);
     cout << "Externally sorted " << total << " objects in " << t.elapsed() << "s." << endl;
     sorted<object, IArchive>(output);
 }
 
 
 int main ( ) {
-    external(10000000);
-    memory(10000000);
+    external(200000000);
+    //memory(1000);
 
 	return 0;
 }
