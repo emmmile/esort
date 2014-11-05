@@ -66,7 +66,7 @@ void write ( const char* out, vector<object> data ) {
 }
 
 // check if the file is really sorted
-template<class T, class Compare = less<T>, class IArchive>
+template<class T, class IArchive, class Compare = less<T>>
 void sorted ( const char* in, Compare comp = Compare() ) {
     ifstream ifs(in, ios::in);
     IArchive iar(ifs);
@@ -103,16 +103,19 @@ void memory ( size_t n) {
 void external ( size_t n ) {
     const char* input = "input.txt";
     const char* output = "output.txt";
+    typedef archive::binary_oarchive OArchive;
+    typedef archive::binary_iarchive IArchive;
+
 
     std::vector<object> data;
 
     create(n, data);
-    write<archive::text_oarchive>(input, data);
+    write<OArchive>(input, data);
 
     timer t;
-    size_t total = esort<object, less<object>>(input, output, less<object>(), 256 * 1024);
+    size_t total = esort<object, less<object>, IArchive, OArchive>(input, output, less<object>(), 256 * 1024);
     cout << "Externally sorted " << total << " objects in " << t.elapsed() << "s." << endl;
-    //sorted<object>(output);
+    sorted<object, IArchive>(output);
 }
 
 

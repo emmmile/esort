@@ -6,23 +6,24 @@
 #include <fstream>
 #include <algorithm>
 #include <functional>
+#include <map>
 #include <cassert>
 using namespace std;
 using namespace boost;
 using namespace boost::archive;
 
-template<class T, class Compare>
-struct heap_entry : public pair<T, size_t> {
+template<class A, class B, class Compare>
+struct heap_entry : public pair<A, B> {
     Compare comp;
 
-    heap_entry( T f, size_t s, Compare c ) 
-    : pair<T, size_t>(f,s), comp(c) { }
+    heap_entry( A a, B b, Compare c ) 
+    : pair<A, B>(a, b), comp(c) { }
 
-    bool operator< (const pair<T,size_t>& another) {
-        // this is actually wrong! another comparator is needed (or at least ==)
-        return !comp(this->first, another.first);
+    bool operator< (const heap_entry& another) {
+        return comp(this->first, another.first);
     }
 };
+
 
 template<class IArchive, class T, class Compare>
 size_t esort_run ( IArchive& iar, Compare comp, size_t memory, vector<T>& data ) {
@@ -50,10 +51,11 @@ size_t esort_run ( IArchive& iar, Compare comp, size_t memory, vector<T>& data )
 
 template<class IArchive, class OArchive, class T, class Compare>
 size_t esort_merge ( OArchive& oar, Compare comp, string& prefix, size_t& index ) {
-    typedef heap_entry<T, Compare> entry;
-    vector<entry> data;
+    typedef heap_entry<T, size_t, Compare> entry;
+
     vector<ifstream*> istreams;
     vector<IArchive*> iarchives;
+    vector<entry> data;
 
     T a;
     for ( size_t i = 0; i < index; ++i ) {
@@ -61,30 +63,29 @@ size_t esort_merge ( OArchive& oar, Compare comp, string& prefix, size_t& index 
         IArchive* iar = new IArchive(*ifs);
         *iar >> a;
 
-        entry e( a, i, comp );
-        data.push_back(e);
+        data.push_back(entry(a, i, comp));
         istreams.push_back(ifs);
         iarchives.push_back(iar);
     }
 
-    make_heap(data.begin(), data.end());
+    sort(data.begin(), data.end());
 
     size_t total = 0;
     while (data.size() > 0) {
-        pop_heap(data.begin(), data.end());
-        entry minimum = data.back();
-        data.pop_back();
-
-        oar << minimum.first;
+        auto minimum = data.begin();
+        a = minimum->first;
+        oar << a;
         ++total;
 
-        T a;
-        size_t index = minimum.second;
+        size_t index = minimum->second;
+        data.erase(minimum);
         try {
             *iarchives[index] >> a;
-            entry e( a, index, comp );
-            data.push_back(e);
-            push_heap(data.begin(), data.end());
+            data.push_back(entry(a, index, comp));
+            // at the end I use a sorted array instead of a heap because
+            // I would need another comparator (or at least ==) because
+            // here heaps are maximum heaps
+            inplace_merge(data.begin(), data.end() - 1, data.end());
         } catch( archive_exception& ex ) {}
     }
 
@@ -113,7 +114,7 @@ size_t esort( const char* in, const char* out, Compare comp = Compare(), size_t 
 
         if ( data.size() > 0 ) {
             ofstream rofs(prefix + to_string(index), ios::out);
-            text_oarchive roar(rofs);
+            OArchive roar(rofs);
             for ( T a : data ) roar << a;
         } else {
             break;
