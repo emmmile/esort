@@ -87,6 +87,7 @@ size_t esort_merge ( OArchive& oar, Compare comp, string& prefix, size_t& index 
             // here heaps are maximum heaps. The cost is that is O(n).
             //inplace_merge(data.begin(), data.end() - 1, data.end());
 
+            // this insertion sort step is even better than inplace_merge!
             for ( auto it = data.rbegin(); (it + 1) != data.rend() && *it < *(it + 1); ++it )
                 swap(*it, *(it + 1));
         } catch( archive_exception& ex ) {}
