@@ -25,7 +25,7 @@ public:
     }
 
     friend ostream& operator << ( ostream& out, object& o ) {
-    	out << o.a << " " << o.b << endl;
+    	out << o.a << " " << o.b;
         return out;
     }
 };
@@ -54,7 +54,7 @@ void create( size_t n, vector<object>& data ) {
 }
 
 template<class OArchive>
-void write ( const char* out, vector<object> data ) {
+void write ( const char* out, const vector<object>& data ) {
     ofstream ofs(out, ios::out);
     OArchive oar(ofs);
     timer t;
@@ -62,33 +62,29 @@ void write ( const char* out, vector<object> data ) {
     for ( size_t i = 0; i < data.size(); ++i ) oar << data[i];
 
     cout << "Written " << data.size() << " objects in " << t.elapsed() << "s." << endl;
-    ofs.close();
 }
 
-// check if the file is really sorted
-template<class T, class IArchive, class Compare = less<T>>
-void sorted ( const char* in, Compare comp = Compare() ) {
+template<class IArchive>
+void read ( const char* in, vector<object>& data ) {
     ifstream ifs(in, ios::in);
     IArchive iar(ifs);
+    timer t;
+
+    data.clear();
 
     object a;
-    object b;
-    iar >> a;
     while ( true ) {
         try {
-            iar >> b;
+            iar >> a;
         } catch( archive_exception& ex ) {
             break;
         }
 
-        assert( !comp(b, a) );
-        a = b;
+        data.push_back(a);
     }
 
-
-    ifs.close();
+    cout << "Read " << data.size() << " objects in " << t.elapsed() << "s." << endl;
 }
-
 
 void memory ( size_t n) {
     std::vector<object> data;
@@ -115,7 +111,9 @@ void external ( size_t n ) {
     timer t;
     size_t total = esort<object, less<object>, IArchive, OArchive>(input, output, less<object>(), 16 * 1024 * 1024);
     cout << "Externally sorted " << total << " objects in " << t.elapsed() << "s." << endl;
-    sorted<object, IArchive>(output);
+    
+    read<IArchive>(output, data);
+    assert( is_sorted(data.begin(), data.end()));
 }
 
 

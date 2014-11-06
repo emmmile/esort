@@ -84,8 +84,11 @@ size_t esort_merge ( OArchive& oar, Compare comp, string& prefix, size_t& index 
             data.push_back(entry(a, index, comp));
             // at the end I use a sorted array instead of a heap because
             // I would need another comparator (or at least ==) because
-            // here heaps are maximum heaps
-            inplace_merge(data.begin(), data.end() - 1, data.end());
+            // here heaps are maximum heaps. The cost is that is O(n).
+            //inplace_merge(data.begin(), data.end() - 1, data.end());
+
+            for ( auto it = data.rbegin(); (it + 1) != data.rend() && *it < *(it + 1); ++it )
+                swap(*it, *(it + 1));
         } catch( archive_exception& ex ) {}
     }
 
