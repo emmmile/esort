@@ -94,6 +94,7 @@ void memory ( size_t n) {
     sort(data.begin(), data.end());
 
     cout << "In-memory sorted " << n << " objects in " << t.elapsed() << "s." << endl;
+    assert( is_sorted(data.begin(), data.end()));
 }
 
 void external ( size_t n ) {
@@ -109,7 +110,7 @@ void external ( size_t n ) {
     write<OArchive>(input, data);
 
     timer t;
-    size_t total = esort<object, less<object>, IArchive, OArchive>(input, output, less<object>(), 16 * 1024 * 1024);
+    size_t total = esort<object, less<object>, IArchive, OArchive>(input, output, less<object>(), 1024 * 1024);
     cout << "Externally sorted " << total << " objects in " << t.elapsed() << "s." << endl;
     
     read<IArchive>(output, data);
@@ -118,7 +119,7 @@ void external ( size_t n ) {
 
 
 int main ( ) {
-    external(200000000);
+    external(20000000);
     //memory(1000);
 
 	return 0;
